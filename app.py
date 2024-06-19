@@ -51,22 +51,16 @@ gpu = st.selectbox('GPU', df['Gpu brand'].unique())
 # OS
 os = st.selectbox('OS', df['os'].unique())
 
-# PPI
-ppi = st.number_input('Pixels Per Inch (PPI)', min_value=0)
-
 if st.button('Predict Price'):
-    # Mengonversi input ke format yang benar
-    if touchscreen == 'Yes':
-        touchscreen = 1
-    else:
-        touchscreen = 0
+    # Convert inputs to the correct format
+    touchscreen = 1 if touchscreen == 'Yes' else 0
+    ips = 1 if ips == 'Yes' else 0
 
-    if ips == 'Yes':
-        ips = 1
-    else:
-        ips = 0
+    # Calculate PPI
+    x_res, y_res = map(int, resolution.split('x'))
+    ppi = ((x_res**2 + y_res**2)**0.5) / screen_size
 
-    # Menyusun query sebagai DataFrame dengan nama kolom yang sesuai
+    # Prepare the query DataFrame
     query = pd.DataFrame({
         'Company': [company],
         'TypeName': [type],
@@ -82,12 +76,11 @@ if st.button('Predict Price'):
         'ppi': [ppi]
     })
 
-    # Cetak DataFrame query untuk memeriksa apakah kolom 'ppi' telah ditambahkan dengan benar
-    st.write("DataFrame query:", query)
-
-    # Prediksi harga
+    # Predict the price
     try:
-        predicted_price = np.exp(pipe.predict(query))[0]
-        st.title(f"Prediksi harga dengan data yang anda input ialah ${int(predicted_price)}USD ")
+        predicted_price_usd = np.exp(pipe.predict(query))[0]
+        exchange_rate = 14500  # Fixed exchange rate from USD to IDR
+        predicted_price_idr = predicted_price_usd * exchange_rate
+        st.title(f"The predicted price for the laptop with the specified configuration is Rp {int(predicted_price_idr):,} ")
     except Exception as e:
         st.error(f"An error occurred: {e}")
