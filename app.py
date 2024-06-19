@@ -3,35 +3,35 @@ import pickle
 import numpy as np
 import pandas as pd
 
-# import the model
+# import model
 pipe = pickle.load(open('pipe.pkl', 'rb'))
 df = pickle.load(open('df.pkl', 'rb'))
 
-st.title("Laptop Price Predictor")
+st.title("Prediksi Harga Laptop")
 
-# brand
-company = st.selectbox('Brand', df['Company'].unique())
+# Merek
+company = st.selectbox('Merek', df['Company'].unique())
 
-# type of laptop
-type = st.selectbox('Type', df['TypeName'].unique())
+# Tipe laptop
+type = st.selectbox('Tipe', df['TypeName'].unique())
 
-# Ram
-ram = st.selectbox('RAM(in GB)', [2, 4, 6, 8, 12, 16, 24, 32, 64])
+# RAM
+ram = st.selectbox('RAM (dalam GB)', [2, 4, 6, 8, 12, 16, 24, 32, 64])
 
-# weight
-weight = st.number_input('Weight of the Laptop')
+# Berat
+weight = st.number_input('Berat Laptop')
 
-# Touchscreen
-touchscreen = st.selectbox('Touchscreen', ['No', 'Yes'])
+# Layar Sentuh
+touchscreen = st.selectbox('Layar Sentuh', ['Tidak', 'Ya'])
 
 # IPS
-ips = st.selectbox('IPS', ['No', 'Yes'])
+ips = st.selectbox('IPS', ['Tidak', 'Ya'])
 
-# screen size
-screen_size = st.number_input('Screen Size')
+# Ukuran layar
+screen_size = st.number_input('Ukuran Layar')
 
-# resolution
-resolution = st.selectbox('Screen Resolution', [
+# Resolusi layar
+resolution = st.selectbox('Resolusi Layar', [
     '1920x1080', '1366x768', '1600x900', '3840x2160', '3200x1800',
     '2880x1800', '2560x1600', '2560x1440', '2304x1440'
 ])
@@ -40,10 +40,10 @@ resolution = st.selectbox('Screen Resolution', [
 cpu = st.selectbox('CPU', df['Cpu brand'].unique())
 
 # HDD
-hdd = st.selectbox('HDD(in GB)', [0, 128, 256, 512, 1024, 2048])
+hdd = st.selectbox('HDD (dalam GB)', [0, 128, 256, 512, 1024, 2048])
 
 # SSD
-ssd = st.selectbox('SSD(in GB)', [0, 8, 128, 256, 512, 1024])
+ssd = st.selectbox('SSD (dalam GB)', [0, 8, 128, 256, 512, 1024])
 
 # GPU
 gpu = st.selectbox('GPU', df['Gpu brand'].unique())
@@ -51,36 +51,40 @@ gpu = st.selectbox('GPU', df['Gpu brand'].unique())
 # OS
 os = st.selectbox('OS', df['os'].unique())
 
-if st.button('Predict Price'):
-    # Convert inputs to the correct format
-    touchscreen = 1 if touchscreen == 'Yes' else 0
-    ips = 1 if ips == 'Yes' else 0
+if st.button('Prediksi Harga'):
+    # Konversi input ke format yang benar
+    touchscreen = 1 jika touchscreen == 'Ya' else 0
+    ips = 1 jika ips == 'Ya' else 0
 
-    # Calculate PPI
-    x_res, y_res = map(int, resolution.split('x'))
-    ppi = ((x_res**2 + y_res**2)**0.5) / screen_size
+    # Validasi ukuran layar
+    if screen_size <= 0:
+        st.error("Ukuran layar harus lebih besar dari nol.")
+    else:
+        # Hitung PPI
+        x_res, y_res = map(int, resolution.split('x'))
+        ppi = ((x_res**2 + y_res**2)**0.5) / screen_size
 
-    # Prepare the query DataFrame
-    query = pd.DataFrame({
-        'Company': [company],
-        'TypeName': [type],
-        'Ram': [ram],
-        'Weight': [weight],
-        'Touchscreen': [touchscreen],
-        'Ips': [ips],
-        'Cpu brand': [cpu],
-        'HDD': [hdd],
-        'SSD': [ssd],
-        'Gpu brand': [gpu],
-        'os': [os],
-        'ppi': [ppi]
-    })
+        # Siapkan DataFrame query
+        query = pd.DataFrame({
+            'Company': [company],
+            'TypeName': [type],
+            'Ram': [ram],
+            'Weight': [weight],
+            'Touchscreen': [touchscreen],
+            'Ips': [ips],
+            'Cpu brand': [cpu],
+            'HDD': [hdd],
+            'SSD': [ssd],
+            'Gpu brand': [gpu],
+            'os': [os],
+            'ppi': [ppi]
+        })
 
-    # Predict the price
-    try:
-        predicted_price_usd = np.exp(pipe.predict(query))[0]
-        exchange_rate = 14500  # Fixed exchange rate from USD to IDR
-        predicted_price_idr = predicted_price_usd * exchange_rate
-        st.title(f"The predicted price for the laptop with the specified configuration is Rp {int(predicted_price_idr):,} ")
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
+        # Prediksi harga
+        try:
+            predicted_price_usd = np.exp(pipe.predict(query))[0]
+            exchange_rate = 14500  # Kurs tetap dari USD ke IDR
+            predicted_price_idr = predicted_price_usd * exchange_rate
+            st.title(f"Harga prediksi untuk laptop dengan konfigurasi yang ditentukan adalah Rp {int(predicted_price_idr):,} ")
+        except Exception as e:
+            st.error(f"Terjadi kesalahan: {e}")
